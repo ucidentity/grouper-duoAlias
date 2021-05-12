@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/grouper.duoAlias.iml" filepath="$PROJECT_DIR$/grouper.duoAlias.iml" />
+      <module fileurl="file://$PROJECT_DIR$/grouper-duoAlias.iml" filepath="$PROJECT_DIR$/grouper-duoAlias.iml" />
     </modules>
   </component>
 </project>
