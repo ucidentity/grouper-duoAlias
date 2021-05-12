@@ -1,0 +1,11 @@
+<application>
+  <component name="PrintSettings">
+    <option name="printScope" value="1" />
+    <option name="PAPER_SIZE" value="Letter" />
+    <option name="FONT_NAME" value="Courier" />
+    <option name="FONT_SIZE" value="9" />
+    <option name="LEFT_MARGIN" value="0.5" />
+    <option name="RIGHT_MARGIN" value="0.5" />
+    <option name="DRAW_BORDER" value="false" />
+  </component>
+</application>
