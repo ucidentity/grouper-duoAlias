@@ -2,7 +2,7 @@
  * @author mchyzer
  * $Id$
  */
-package edu.internet2.middleware.grouperDuo;
+package edu.berkeley.calnet.grouper.duoAlias;
 
 import java.util.Set;
 

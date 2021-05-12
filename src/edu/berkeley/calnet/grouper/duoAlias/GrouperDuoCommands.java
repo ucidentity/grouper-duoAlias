@@ -2,12 +2,15 @@
  * @author mchyzer
  * $Id$
  */
-package edu.internet2.middleware.grouperDuo;
+package edu.berkeley.calnet.grouper.duoAlias;
 
 import java.io.UnsupportedEncodingException;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
+import edu.internet2.middleware.grouperDuo.GrouperDuoGroup;
+import edu.internet2.middleware.grouperDuo.GrouperDuoLog;
+import edu.internet2.middleware.grouperDuo.GrouperDuoUser;
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;

@@ -2,7 +2,7 @@
  * @author mchyzer
  * $Id$
  */
-package edu.internet2.middleware.grouperDuo;
+package edu.berkeley.calnet.grouper.duoAlias;
 
 import java.sql.Timestamp;
 import java.util.HashMap;
@@ -13,6 +13,10 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 
+import edu.internet2.middleware.grouperDuo.GrouperDuoGroup;
+import edu.internet2.middleware.grouperDuo.GrouperDuoLog;
+import edu.internet2.middleware.grouperDuo.GrouperDuoUser;
+import edu.internet2.middleware.grouperDuo.GrouperDuoUtils;
 import net.sf.json.JSONObject;
 
 import org.apache.commons.lang.StringUtils;
@@ -142,7 +146,7 @@ public class GrouperDuoFullRefresh extends OtherJobBase {
       }
       
       //get groups from duo
-      Map<String, GrouperDuoGroup> duoGroupNameToGroupMap = GrouperDuoCommands.retrieveGroups();
+      Map<String, GrouperDuoGroup> duoGroupNameToGroupMap = edu.berkeley.calnet.grouper.duo.GrouperDuoCommands.retrieveGroups();
 
       debugMap.put("duoGroupCount", duoGroupNameToGroupMap.size());
 
@@ -166,7 +170,7 @@ public class GrouperDuoFullRefresh extends OtherJobBase {
         
         for (String groupExtensionToRemove : groupExtensionsInDuoNotInGrouper) {
           GrouperDuoGroup grouperDuoGroup = duoGroupNameToGroupMap.get(groupExtensionToRemove);
-          GrouperDuoCommands.deleteDuoGroup(grouperDuoGroup.getId(), false);
+          edu.berkeley.calnet.grouper.duo.GrouperDuoCommands.deleteDuoGroup(grouperDuoGroup.getId(), false);
           
           deleteCount++;
           debugMap.put("deleteDuoGroup_" + groupExtensionToRemove, true);
@@ -185,7 +189,7 @@ public class GrouperDuoFullRefresh extends OtherJobBase {
         
         if (groupInDuo == null) {
           //create duo group
-          GrouperDuoCommands.createDuoGroup(groupExtensionInGrouper, groupInGrouper.getDescription(), false);
+          edu.berkeley.calnet.grouper.duo.GrouperDuoCommands.createDuoGroup(groupExtensionInGrouper, groupInGrouper.getDescription(), false);
           needsGroupRefresh = true;
           debugMap.put("createDuoGroup_" + groupExtensionInGrouper, true);
           insertCount++;
@@ -194,7 +198,7 @@ public class GrouperDuoFullRefresh extends OtherJobBase {
 
       if (needsGroupRefresh) {
         //lets get them again if some were created
-        duoGroupNameToGroupMap = GrouperDuoCommands.retrieveGroups();
+        duoGroupNameToGroupMap = edu.berkeley.calnet.grouper.duo.GrouperDuoCommands.retrieveGroups();
       }
       
       //# put the comma separated list of sources to send to duo
@@ -213,18 +217,18 @@ public class GrouperDuoFullRefresh extends OtherJobBase {
         GrouperDuoGroup duoGroup = duoGroupNameToGroupMap.get(groupExtensionInGrouper);
 
         //get group info to see if description ok
-        JSONObject groupInfoResponse = GrouperDuoCommands.retrieveGroupInfo(duoGroup.getId(), false);
+        JSONObject groupInfoResponse = edu.berkeley.calnet.grouper.duo.GrouperDuoCommands.retrieveGroupInfo(duoGroup.getId(), false);
 
         //see if update description
         {
           String duoDescription = groupInfoResponse.getString("desc");
           
           if (!StringUtils.equals(grouperGroup.getDescription(), duoDescription)) {
-            GrouperDuoCommands.updateDuoGroup(duoGroup.getId(), grouperGroup.getDescription(), false);
+            edu.berkeley.calnet.grouper.duo.GrouperDuoCommands.updateDuoGroup(duoGroup.getId(), grouperGroup.getDescription(), false);
           }
         }
         
-        Map<String, GrouperDuoUser> duoUsernameToUser = GrouperDuoCommands.retrieveUsersForGroup(groupInfoResponse);
+        Map<String, GrouperDuoUser> duoUsernameToUser = edu.berkeley.calnet.grouper.duo.GrouperDuoCommands.retrieveUsersForGroup(groupInfoResponse);
         
         Set<String> grouperUsernamesInGroup = new HashSet<String>();
         
@@ -265,12 +269,12 @@ public class GrouperDuoFullRefresh extends OtherJobBase {
 
         //add to duo
         for (String grouperUsername : grouperUsernamesNotInDuo) {
-          String duoUserId = GrouperDuoCommands.retrieveUserIdFromUsername(grouperUsername);
+          String duoUserId = edu.berkeley.calnet.grouper.duo.GrouperDuoCommands.retrieveUserIdFromUsername(grouperUsername);
           if (StringUtils.isBlank(duoUserId)) {
             LOG.warn("User is not in duo: " + grouperUsername);
           } else {
             insertCount++;
-            GrouperDuoCommands.assignUserToGroup(duoUserId, duoGroup.getId(), false);
+            edu.berkeley.calnet.grouper.duo.GrouperDuoCommands.assignUserToGroup(duoUserId, duoGroup.getId(), false);
           }
         }
 
@@ -283,7 +287,7 @@ public class GrouperDuoFullRefresh extends OtherJobBase {
         //remove from duo
         for (String duoUsername : duoUsernamesNotInGrouper) {
           String duoUserId = duoUsernameToUser.get(duoUsername).getUserId();
-          GrouperDuoCommands.removeUserFromGroup(duoUserId, duoGroup.getId(), false);
+          edu.berkeley.calnet.grouper.duo.GrouperDuoCommands.removeUserFromGroup(duoUserId, duoGroup.getId(), false);
           deleteCount++;
         }
         

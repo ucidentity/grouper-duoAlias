@@ -2,11 +2,14 @@
  * @author mchyzer
  * $Id$
  */
-package edu.internet2.middleware.grouperDuo;
+package edu.berkeley.calnet.grouper.duoAlias;
 
 import java.util.List;
 import java.util.Map;
 
+import edu.internet2.middleware.grouperDuo.GrouperDuoCommands;
+import edu.internet2.middleware.grouperDuo.GrouperDuoGroup;
+import edu.internet2.middleware.grouperDuo.GrouperDuoUtils;
 import org.apache.commons.lang.StringUtils;
 
 import edu.internet2.middleware.grouper.Group;

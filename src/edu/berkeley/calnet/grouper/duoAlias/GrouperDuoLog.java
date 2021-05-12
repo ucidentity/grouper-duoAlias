@@ -2,7 +2,7 @@
  * @author mchyzer
  * $Id: TfRestLogicTrafficLog.java,v 1.1 2013/06/20 06:02:50 mchyzer Exp $
  */
-package edu.internet2.middleware.grouperDuo;
+package edu.berkeley.calnet.grouper.duoAlias;
 
 import java.util.Map;
 
