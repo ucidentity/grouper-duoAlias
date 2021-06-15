@@ -29,7 +29,7 @@ public class GrouperDuoAliasSet {
      */
     private String aliasValue;
 
-    
+
     /**
      * alias name
      * @return the alias name
