@@ -14,12 +14,12 @@ import edu.internet2.middleware.grouper.util.GrouperUtil;
 /**
  *
  */
-public class GrouperDuoUtils {
+public class GrouperDuoAliasUtils {
 
   /**
    * 
    */
-  public GrouperDuoUtils() {
+  public GrouperDuoAliasUtils() {
   }
 
   /**

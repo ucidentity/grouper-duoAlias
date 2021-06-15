@@ -45,7 +45,7 @@ import edu.internet2.middleware.subject.SubjectNotFoundException;
  *
  */
 @DisallowConcurrentExecution
-public class GrouperDuoFullRefresh extends OtherJobBase {
+public class GrouperDuoAliasFullRefresh extends OtherJobBase {
 
   /**
    * 
@@ -61,12 +61,12 @@ public class GrouperDuoFullRefresh extends OtherJobBase {
   public static final String GROUPER_DUO_FULL_REFRESH = "CHANGE_LOG_grouperDuoFullRefresh";
 
   /** logger */
-  private static final Log LOG = GrouperUtil.getLog(GrouperDuoFullRefresh.class);
+  private static final Log LOG = GrouperUtil.getLog(GrouperDuoAliasFullRefresh.class);
 
   /**
    * 
    */
-  public GrouperDuoFullRefresh() {
+  public GrouperDuoAliasFullRefresh() {
   }
 
   /**
@@ -101,7 +101,7 @@ public class GrouperDuoFullRefresh extends OtherJobBase {
     //lets enter a log entry so it shows up as error in the db
     Hib3GrouperLoaderLog hib3GrouploaderLog = otherJobInput.getHib3GrouperLoaderLog();
     hib3GrouploaderLog.setHost(GrouperUtil.hostname());
-    hib3GrouploaderLog.setJobName(GrouperDuoFullRefresh.GROUPER_DUO_FULL_REFRESH);
+    hib3GrouploaderLog.setJobName(GrouperDuoAliasFullRefresh.GROUPER_DUO_FULL_REFRESH);
     hib3GrouploaderLog.setJobScheduleType(GrouperLoaderScheduleType.CRON.name());
     hib3GrouploaderLog.setJobType(GrouperLoaderType.MAINTENANCE.name());
 

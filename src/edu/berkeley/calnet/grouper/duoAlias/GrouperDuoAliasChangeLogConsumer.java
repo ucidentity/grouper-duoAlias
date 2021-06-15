@@ -28,12 +28,12 @@ import edu.internet2.middleware.subject.Subject;
 /**
  *
  */
-public class GrouperDuoChangeLogConsumer extends ChangeLogConsumerBase {
+public class GrouperDuoAliasChangeLogConsumer extends ChangeLogConsumerBase {
 
   /**
    * 
    */
-  public GrouperDuoChangeLogConsumer() {
+  public GrouperDuoAliasChangeLogConsumer() {
     //schedule with job in grouper-loader.properties
     //otherJob.duo.class = edu.internet2.middleware.grouperDuo.GrouperDuoFullRefresh
     //otherJob.duo.quartzCron = 0 0 5 * * ?

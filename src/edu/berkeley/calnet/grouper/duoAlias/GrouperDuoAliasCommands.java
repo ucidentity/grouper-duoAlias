@@ -27,7 +27,7 @@ import edu.internet2.middleware.grouper.util.GrouperUtil;
 /**
  *
  */
-public class GrouperDuoCommands {
+public class GrouperDuoAliasCommands {
 
   /**
    * 
@@ -85,7 +85,7 @@ public class GrouperDuoCommands {
   /**
    * 
    */
-  public GrouperDuoCommands() {
+  public GrouperDuoAliasCommands() {
   }
 
   /**
