@@ -7,9 +7,9 @@ package edu.berkeley.calnet.grouper.duoAlias;
 import java.util.List;
 import java.util.Map;
 
-import edu.internet2.middleware.grouperDuo.GrouperDuoCommands;
-import edu.internet2.middleware.grouperDuo.GrouperDuoGroup;
-import edu.internet2.middleware.grouperDuo.GrouperDuoUtils;
+import edu.berkeley.calnet.grouper.duoAlias.GrouperDuoAliasCommands;
+import edu.berkeley.calnet.grouper.duoAlias.GrouperDuoAliasSet;
+import edu.berkeley.calnet.grouper.duoAlias.GrouperDuoUtils;
 import org.apache.commons.lang.StringUtils;
 
 import edu.internet2.middleware.grouper.Group;
@@ -60,52 +60,9 @@ public class GrouperDuoAliasChangeLogConsumer extends ChangeLogConsumerBase {
     
     //try catch so we can track that we made some progress
     try {
+      GrouperDuoAliasUtils.doAliasSetup();
       for (ChangeLogEntry changeLogEntry : changeLogEntryList) {
         currentId = changeLogEntry.getSequenceNumber();
- 
-        //if this is a group add action and category
-        if (changeLogEntry.equalsCategoryAndAction(ChangeLogTypeBuiltin.GROUP_ADD)) {
- 
-          String groupName = changeLogEntry.retrieveValueForLabel(ChangeLogLabels.GROUP_ADD.name);
-          if (GrouperDuoUtils.validDuoGroupName(groupName)) {
-            String groupExtension = GrouperUtil.extensionFromName(groupName);
-            //get the group in grouper
-            String groupDescription = changeLogEntry.retrieveValueForLabel(ChangeLogLabels.GROUP_ADD.description);
-            //shouldnt be the case but check anyways
-            if (!GrouperDuoCommands.retrieveGroups().containsKey(groupExtension)) {
-              GrouperDuoCommands.createDuoGroup(groupExtension, groupDescription, true);
-            }
-          }
-        } else if (changeLogEntry.equalsCategoryAndAction(ChangeLogTypeBuiltin.GROUP_DELETE)) {
-          String groupName = changeLogEntry.retrieveValueForLabel(ChangeLogLabels.GROUP_DELETE.name);
-          if (GrouperDuoUtils.validDuoGroupName(groupName)) {
-            String groupExtension = GrouperUtil.extensionFromName(groupName);
-            //shouldnt be the case but check anyways
-            GrouperDuoGroup grouperDuoGroup = GrouperDuoCommands.retrieveGroups().get(groupExtension);
-            if (grouperDuoGroup != null) {
-              GrouperDuoCommands.deleteDuoGroup(grouperDuoGroup.getId(), true);
-            }
-          }
- 
-        } if (changeLogEntry.equalsCategoryAndAction(ChangeLogTypeBuiltin.GROUP_UPDATE)) {
-          String groupName = changeLogEntry.retrieveValueForLabel(ChangeLogLabels.GROUP_UPDATE.name);
-          if (GrouperDuoUtils.validDuoGroupName(groupName)) {
-            String groupExtension = GrouperUtil.extensionFromName(groupName);
-            //get the group in grouper
-            
-            Group group = GroupFinder.findByName(grouperSession, groupName, false);
-
-            if (group != null) {
-              
-              //shouldnt be the case but check anyways
-              Map<String, GrouperDuoGroup> groupNameToDuoGroupMap = GrouperDuoCommands.retrieveGroups();
-              GrouperDuoGroup grouperDuoGroup = groupNameToDuoGroupMap.get(groupExtension);
-              if (grouperDuoGroup != null) {
-                GrouperDuoCommands.updateDuoGroup(grouperDuoGroup.getId(), group.getDescription(), true);
-              }
-            }
-          }
-        } 
         
         boolean isMembershipAdd = changeLogEntry.equalsCategoryAndAction(ChangeLogTypeBuiltin.MEMBERSHIP_ADD);
         boolean isMembershipDelete = changeLogEntry.equalsCategoryAndAction(ChangeLogTypeBuiltin.MEMBERSHIP_DELETE);
@@ -113,16 +70,9 @@ public class GrouperDuoAliasChangeLogConsumer extends ChangeLogConsumerBase {
         if (isMembershipAdd || isMembershipDelete || isMembershipUpdate) {
           String groupName = changeLogEntry.retrieveValueForLabel(ChangeLogLabels.MEMBERSHIP_ADD.groupName);
 
-          if (GrouperDuoUtils.validDuoGroupName(groupName)) {
+          if (GrouperDuoAliasUtils.validGroupName(groupName)) {
             String sourceId = changeLogEntry.retrieveValueForLabel(ChangeLogLabels.MEMBERSHIP_ADD.sourceId);
 
-            boolean inCorrectSubjectSource = GrouperDuoUtils.configSourcesForSubjects().contains(sourceId);
-            
-            if (inCorrectSubjectSource) {
-              String groupExtension = GrouperUtil.extensionFromName(groupName);
-              Group group = GroupFinder.findByName(grouperSession, groupName, false);
-              Map<String, GrouperDuoGroup> groupNameToDuoGroupMap = GrouperDuoCommands.retrieveGroups();
-              GrouperDuoGroup grouperDuoGroup = groupNameToDuoGroupMap.get(groupExtension);
               String subjectId = changeLogEntry.retrieveValueForLabel(ChangeLogLabels.MEMBERSHIP_ADD.subjectId);
               
               String subjectAttributeForDuoUsername = GrouperDuoUtils.configSubjectAttributeForDuoUsername();
@@ -141,34 +91,30 @@ public class GrouperDuoAliasChangeLogConsumer extends ChangeLogConsumerBase {
                   }                    
                 }
               }
-              
-              String duoGroupId = grouperDuoGroup != null ? grouperDuoGroup.getId() : null;
-              String duoUserId = !StringUtils.isBlank(username) ? GrouperDuoCommands.retrieveUserIdFromUsername(username) : null;
-              
-              //cant do anything if missing these things
-              if (!StringUtils.isBlank(duoGroupId) && !StringUtils.isBlank(duoUserId)) {
 
-                boolean userInDuoGroup = GrouperDuoCommands.userInGroup(duoUserId, duoGroupId, true);
-                
-                boolean addUserToGroup = isMembershipAdd;
+              String duoUserId = !StringUtils.isBlank(username) ? GrouperDuoAliasCommands.retrieveUserIdFromUsername(username) : null;
+              
+              //cant do anything if missing this
+              if (!StringUtils.isBlank(duoUserId)) {
+                // get the complete alias set
+                GrouperDuoAliasSet aliasSet = GrouperDuoAliasUtils.getAliasValue(subject, groupName);
+                boolean addDuoAlias = isMembershipAdd;
                 
                 //if update it could have unexpired
                 if (isMembershipUpdate && group != null && subject != null && group.hasMember(subject)) {
-                  addUserToGroup = true;
+                  addDuoAlias = true;
                 }
                 
-                //see if any update is needed
-                if (addUserToGroup != userInDuoGroup) {
-                  if (addUserToGroup) {
-                    GrouperDuoCommands.assignUserToGroup(duoUserId, duoGroupId, true);
-                  } else {
-                    GrouperDuoCommands.removeUserFromGroup(duoUserId, duoGroupId, true);
-                  }
+
+                if (addDuoAlias) {
+                  GrouperDuoAliasCommands.assignDuoUserAlias(duoUserId, aliasSet.getAliasName(), aliasSet.getAliasValue());
+                } else {
+                  GrouperDuoAliasCommands.assignDuoUserAlias(duoUserId, aliasSet.getAliasName(),"");
                 }
+
               }
             }
           }
-        }
  
         //we successfully processed this record
       }
