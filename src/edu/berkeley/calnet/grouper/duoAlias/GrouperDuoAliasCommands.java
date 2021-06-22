@@ -9,14 +9,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 
-import edu.internet2.middleware.grouperDuo.GrouperDuoLog;
+import edu.berkeley.calnet.grouper.duoAlias.GrouperDuoAliasLog;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import com.duosecurity.client.Http;
 
@@ -36,32 +36,6 @@ public class GrouperDuoAliasCommands {
   @SuppressWarnings("unused")
   public static void main(String[] args) {
 
-//    for (GrouperDuoGroup grouperDuoGroup : retrieveGroups().values()) {
-//      System.out.println(grouperDuoGroup);
-//    }
-
-//    createDuoGroup("test2", "testDesc", true);
-//    updateDuoGroup("DG6LYPHI53Y8K50JJZYQ", "testDesc2", true);
-
-
-
-    // mchyzer DU71ZRNO1W6507WQMJIP
-//    System.out.println(retrieveDuoUserByIdOrUsername("mchyzer", false, null).getString("user_id"));
-
-    String username = "mchyzer";
-    String groupName = "test2";
-//      assignUserToGroupIfNotInGroup(retrieveUserIdFromUsername(username), retrieveGroupIdFromGroupName(groupName), false);
-//    removeUserFromGroup(retrieveDuoUserByIdOrUsername("mchyzer", false, null).getString("user_id"), retrieveGroups().get("test2").getId(), false);
-//    System.out.println(userInGroup(retrieveDuoUserByIdOrUsername("mchyzer", false, null).getString("user_id"), retrieveGroups().get("test2").getId(), false));
-
-//      deleteDuoGroup(retrieveGroupIdFromGroupName(groupName), false);
-
-    deleteDuoGroup("DGVWQ4JEQIUE390MJLDD", false);
-
-//      for (GrouperDuoUser grouperDuoUser : retrieveUsersForGroup(retrieveGroupIdFromGroupName(groupName)).values()) {
-//        System.out.println(grouperDuoUser);
-//      }
-
   }
 
   /**
@@ -80,8 +54,8 @@ public class GrouperDuoAliasCommands {
    * @param aliasValue
    * @return boolean (true if the alias was set)
    **/
-  public static boolean assignDuoUserAlias(String userId, String aliasId, String aliasValue) {
-    return assignDuoUserAlias(userId, aliasId, aliasValue, null);
+  public static void assignDuoUserAlias(String userId, String aliasId, String aliasValue) {
+    assignDuoUserAlias(userId, aliasId, aliasValue, null);
   }
 
   /**
@@ -109,7 +83,7 @@ public class GrouperDuoAliasCommands {
    */
   private static Http httpAdmin(String method, String path, Integer timeoutSeconds) {
 
-    String domain = GrouperLoaderConfig.retrieveConfig().propertyValueStringRequired("grouperDuo.adminDomainName");
+    String domain = GrouperLoaderConfig.retrieveConfig().propertyValueStringRequired("grouperDuoAlias.adminDomainName");
 
     Http request = (timeoutSeconds != null && timeoutSeconds > 0) ?
             new Http(method, domain, path, timeoutSeconds) : new Http(method, domain, path);
@@ -135,8 +109,8 @@ public class GrouperDuoAliasCommands {
    * @param request
    */
   private static void signHttpAdmin(Http request) {
-    String integrationKey = GrouperLoaderConfig.retrieveConfig().propertyValueStringRequired("grouperDuo.adminIntegrationKey");
-    String secretKey = GrouperLoaderConfig.retrieveConfig().propertyValueStringRequired("grouperDuo.adminSecretKey");
+    String integrationKey = GrouperLoaderConfig.retrieveConfig().propertyValueStringRequired("grouperDuoAlias.adminIntegrationKey");
+    String secretKey = GrouperLoaderConfig.retrieveConfig().propertyValueStringRequired("grouperDuoAlias.adminSecretKey");
     try {
       request.signRequest(integrationKey,
               secretKey);
@@ -243,10 +217,10 @@ public class GrouperDuoAliasCommands {
       }
       return duoUser;
     } catch (RuntimeException re) {
-      debugMap.put("exception", ExceptionUtils.getFullStackTrace(re));
+      debugMap.put("exception", ExceptionUtils.getStackTrace(re));
       throw re;
     } finally {
-      GrouperDuoLog.duoLog(debugMap, startTime);
+      GrouperDuoAliasLog.duoLog(debugMap, startTime);
     }
   }
 
@@ -258,9 +232,9 @@ public class GrouperDuoAliasCommands {
    * @param aliasId
    * @param aliasValue
    * @param timeoutSeconds null if no timeout
-   * @return boolean (true if the alias was set)
+   * @return None
    */
-  public static boolean assignDuoUserAlias(String userId, String aliasId, String aliasValue, Integer timeoutSeconds) {
+  public static void assignDuoUserAlias(String userId, String aliasId, String aliasValue, Integer timeoutSeconds) {
 
     Map<String, Object> debugMap = new LinkedHashMap<String, Object>();
 
@@ -281,16 +255,11 @@ public class GrouperDuoAliasCommands {
       String path = "/admin/v1/users/" + userId;
       debugMap.put("POST", path);
       Http request = httpAdmin("POST", path);
-      //request.addParam("aliases", "{" + \"aliasId\" + ":" + alias + "}");
 
       JSONObject aliasParam = new JSONObject();
-      aliasParam.put(aliasId, alias);
-      //request.addParam( "aliases", "\"" + aliasParam.toString() + "\"" );
-      //System.out.print("\n\n");
+
       String formatedAliases = String.format("%s=%s", aliasId, aliasValue);
-      System.out.println(formatedAliases);
       request.addParam( "aliases", formatedAliases );
-      //request.addParam( "aliases", "alias3=jeffreym-test3&alias5=jeffreym-test5");
 
       signHttpAdmin(request);
 
@@ -300,7 +269,6 @@ public class GrouperDuoAliasCommands {
 
       if (jsonObject.has("code") && jsonObject.getInt("code") == 40401) {
         debugMap.put("code", 40401);
-        return false;
       }
 
       if (!StringUtils.equals(jsonObject.getString("stat"), "OK")) {
@@ -308,17 +276,15 @@ public class GrouperDuoAliasCommands {
         debugMap.put("result", result);
         throw new RuntimeException("Bad response from Duo: " + result + ", " + userId);
       }
-      JSONObject duoUser = jsonObject.get("response");
+
+      JSONObject duoUser = (JSONObject) jsonObject.get("response");
 
       if (duoUser != null) {
-        if (duoUser.getJSONObject("aliases").get(aliasId).equals(aliasValue)){
-          return true;
-        }
+        debugMap.put("wasSet", duoUser.getJSONObject("aliases").get(aliasId).equals(aliasValue));
       }
-      return false;
 
     } catch (RuntimeException re) {
-      debugMap.put("exception", ExceptionUtils.getFullStackTrace(re));
+      debugMap.put("exception", ExceptionUtils.getStackTrace(re));
       throw re;
     }
   }

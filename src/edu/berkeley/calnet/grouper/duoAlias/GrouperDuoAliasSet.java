@@ -11,7 +11,7 @@ public class GrouperDuoAliasSet {
     /**
      *
      */
-    public GrouperDuoAliasUtils() {
+    public GrouperDuoAliasSet() {
     }
 
     /**
