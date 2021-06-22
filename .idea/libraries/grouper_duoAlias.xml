@@ -1,7 +1,7 @@
 <component name="libraryTable">
-  <library name="grouper-duo">
+  <library name="grouper-duoAlias">
     <CLASSES>
-      <root url="jar://$PROJECT_DIR$/grouper-duo.jar!/" />
+      <root url="jar://$PROJECT_DIR$/grouper-duoAlias.jar!/" />
     </CLASSES>
     <JAVADOC />
     <SOURCES />

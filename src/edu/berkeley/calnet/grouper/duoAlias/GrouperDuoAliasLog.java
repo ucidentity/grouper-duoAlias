@@ -15,10 +15,10 @@ import edu.internet2.middleware.grouper.util.GrouperUtil;
 /**
  * logger to log the traffic of duo
  */
-public class GrouperDuoLog {
+public class GrouperDuoAliasLog {
 
   /** logger */
-  private static final Log LOG = GrouperUtil.getLog(GrouperDuoLog.class);
+  private static final Log LOG = GrouperUtil.getLog(GrouperDuoAliasLog.class);
  
   /**
    * log something to the log file

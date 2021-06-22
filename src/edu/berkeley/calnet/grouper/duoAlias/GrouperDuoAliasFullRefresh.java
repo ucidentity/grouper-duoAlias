@@ -17,25 +17,24 @@ import java.util.Date;
 import edu.berkeley.calnet.grouper.duoAlias.GrouperDuoAliasLog;
 import edu.berkeley.calnet.grouper.duoAlias.GrouperDuoAliasUtils;
 import edu.berkeley.calnet.grouper.duoAlias.GrouperDuoAliasCommands;
-import net.sf.json.JSONObject;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
+
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.apache.commons.logging.Log;
 import org.quartz.DisallowConcurrentExecution;
 
 import edu.internet2.middleware.grouper.Group;
+import edu.internet2.middleware.grouper.GroupFinder;
 import edu.internet2.middleware.grouper.GrouperSession;
 import edu.internet2.middleware.grouper.Member;
-import edu.internet2.middleware.grouper.Stem;
-import edu.internet2.middleware.grouper.Stem.Scope;
-import edu.internet2.middleware.grouper.StemFinder;
 import edu.internet2.middleware.grouper.app.loader.GrouperLoaderConfig;
 import edu.internet2.middleware.grouper.app.loader.GrouperLoaderScheduleType;
 import edu.internet2.middleware.grouper.app.loader.GrouperLoaderStatus;
 import edu.internet2.middleware.grouper.app.loader.GrouperLoaderType;
 import edu.internet2.middleware.grouper.app.loader.OtherJobBase;
 import edu.internet2.middleware.grouper.pit.PITGroup;
+import edu.internet2.middleware.grouper.pit.finder.PITGroupFinder;
 import edu.internet2.middleware.grouper.app.loader.db.Hib3GrouperLoaderLog;
 import edu.internet2.middleware.grouper.util.GrouperUtil;
 import edu.internet2.middleware.subject.Subject;
@@ -109,8 +108,8 @@ public class GrouperDuoAliasFullRefresh extends OtherJobBase {
     hib3GrouploaderLog.setStartedTime(new Timestamp(System.currentTimeMillis()));
     
     long startedMillis = System.currentTimeMillis();
-    String groupName = "";
     GrouperDuoAliasSet aliasSet = null;
+    Subject subject = null;
     
     try {
       
@@ -119,8 +118,8 @@ public class GrouperDuoAliasFullRefresh extends OtherJobBase {
       GrouperDuoAliasUtils.doAliasSetup();
       Set<String> groupNames = GrouperDuoAliasUtils.getGroupNames();
       Map<String, Group> groupNameToGroupMap = new HashMap<String, Group>();
-      for (groupName : groupNames){
-        groupNameToGroupMap.put(groupName, findByName(grouperSession, groupName, true));
+      for (String groupName : groupNames){
+        groupNameToGroupMap.put(groupName, GroupFinder.findByName(grouperSession, groupName, true));
       }
 
        debugMap.put("grouperGroupNameCount", groupNameToGroupMap.size());
@@ -142,11 +141,10 @@ public class GrouperDuoAliasFullRefresh extends OtherJobBase {
       int insertCount = 0;
       int deleteCount = 0;
       int unresolvableCount = 0;
-      Subject subject = null;
-      String grouperUsername = "";
+      int totalCount = 0;
       
       //loop through groups
-      for (groupName : groupNameToGroupMap.keySet()) {
+      for (String groupName : groupNameToGroupMap.keySet()) {
         
         Group grouperGroup = groupNameToGroupMap.get(groupName);
 
@@ -161,7 +159,7 @@ public class GrouperDuoAliasFullRefresh extends OtherJobBase {
               grouperUsernamesInGroup.add(member.getSubjectId());
             } else {
               try {
-                Subject subject = member.getSubject();
+                subject = member.getSubject();
                 String attributeValue = subject.getAttributeValue(subjectAttributeForDuoUsername);
                 if (StringUtils.isBlank(attributeValue)) {
                   //i guess this is ok
@@ -184,7 +182,7 @@ public class GrouperDuoAliasFullRefresh extends OtherJobBase {
 
 
         //add aliases to duo users
-        for (grouperUsername : grouperUsernamesInGroup) {
+        for (String grouperUsername : grouperUsernamesInGroup) {
           String duoUserId = GrouperDuoAliasCommands.retrieveUserIdFromUsername(grouperUsername);
           if (StringUtils.isBlank(duoUserId)) {
             LOG.warn("User is not in duo: " + grouperUsername);
@@ -195,9 +193,15 @@ public class GrouperDuoAliasFullRefresh extends OtherJobBase {
           }
         }
 
+        java.util.Date utilDate = grouperGroup.getCreateTime();
+        java.sql.Date sqlDate = new java.sql.Date(utilDate.getTime());
+        java.sql.Timestamp sqlTS = new java.sql.Timestamp(utilDate.getTime());
 
-        Set<Member> membersThatHaveBeenDeleted = grouperGroup.getMembers("id", grouperGroup.getCreateTime(),
-                                                                          new java.util.Date(), sourcesForSubjects, null);
+        PITGroup pitGrouperGroup = PITGroupFinder.findById(grouperGroup.getId(), true);
+        Set<Member> membersThatHaveBeenDeleted = pitGrouperGroup.getMembers("id",
+                                                                            new java.sql.Timestamp(grouperGroup.getCreateTime().getTime()),
+                                                                            new Timestamp(System.currentTimeMillis()),
+                                                                            null, null);
         Set<Member> currentMembers = grouperGroup.getMembers();
 
         membersThatHaveBeenDeleted.removeAll(currentMembers);
@@ -211,7 +215,7 @@ public class GrouperDuoAliasFullRefresh extends OtherJobBase {
               grouperUsernamesToDeleteAlias.add(member.getSubjectId());
             } else {
               try {
-                Subject subject = member.getSubject();
+                subject = member.getSubject();
                 String attributeValue = subject.getAttributeValue(subjectAttributeForDuoUsername);
                 if (StringUtils.isBlank(attributeValue)) {
                   //i guess this is ok
@@ -230,7 +234,7 @@ public class GrouperDuoAliasFullRefresh extends OtherJobBase {
         }
 
         //remove aliases for duo users that have been deleted
-        for (grouperUsername : grouperUsernamesInGroup) {
+        for (String grouperUsername : grouperUsernamesToDeleteAlias) {
           String duoUserId = GrouperDuoAliasCommands.retrieveUserIdFromUsername(grouperUsername);
           if (StringUtils.isBlank(duoUserId)) {
             LOG.warn("User is not in duo: " + grouperUsername);
@@ -240,7 +244,7 @@ public class GrouperDuoAliasFullRefresh extends OtherJobBase {
             GrouperDuoAliasCommands.assignDuoUserAlias(duoUserId, aliasSet.getAliasName(), "");
           }
         }
-        debugMap.put("removes_" + grouperGroup.getExtension(), duoUsernamesNotInGrouper.size());
+        debugMap.put("removes_" + grouperGroup.getExtension(), grouperUsernamesToDeleteAlias.size());
 
         debugMap.put("grouperSubjectCount_" + groupName, insertCount);
         totalCount += insertCount;
@@ -263,10 +267,10 @@ public class GrouperDuoAliasFullRefresh extends OtherJobBase {
       hib3GrouploaderLog.store();
       
     } catch (Exception e) {
-      debugMap.put("exception", ExceptionUtils.getFullStackTrace(e));
+      debugMap.put("exception", ExceptionUtils.getStackTrace(e));
       String errorMessage = "Problem running job: '" + GrouperLoaderType.GROUPER_CHANGE_LOG_TEMP_TO_CHANGE_LOG + "'";
       LOG.error(errorMessage, e);
-      errorMessage += "\n" + ExceptionUtils.getFullStackTrace(e);
+      errorMessage += "\n" + ExceptionUtils.getStackTrace(e);
       try {
         //lets enter a log entry so it shows up as error in the db
         hib3GrouploaderLog.setMillis((int)(System.currentTimeMillis() - startedMillis));

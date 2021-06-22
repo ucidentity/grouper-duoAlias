@@ -9,14 +9,14 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 
-import edu.internet2.middleware.grouperDuo.GrouperDuoLog;
+import edu.berkeley.calnet.grouper.duoAlias.GrouperDuoAliasLog;
 
 import net.sf.json.JSONArray;
 import net.sf.json.JSONObject;
 import net.sf.json.JSONSerializer;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import com.duosecurity.client.Http;
 
@@ -54,8 +54,8 @@ public class GrouperDuoAliasCommands {
    * @param aliasValue
    * @return boolean (true if the alias was set)
    **/
-  public static boolean assignDuoUserAlias(String userId, String aliasId, String aliasValue) {
-    return assignDuoUserAlias(userId, aliasId, aliasValue, null);
+  public static void assignDuoUserAlias(String userId, String aliasId, String aliasValue) {
+    assignDuoUserAlias(userId, aliasId, aliasValue, null);
   }
 
   /**
@@ -217,10 +217,10 @@ public class GrouperDuoAliasCommands {
       }
       return duoUser;
     } catch (RuntimeException re) {
-      debugMap.put("exception", ExceptionUtils.getFullStackTrace(re));
+      debugMap.put("exception", ExceptionUtils.getStackTrace(re));
       throw re;
     } finally {
-      GrouperDuoLog.duoLog(debugMap, startTime);
+      GrouperDuoAliasLog.duoLog(debugMap, startTime);
     }
   }
 
@@ -234,7 +234,7 @@ public class GrouperDuoAliasCommands {
    * @param timeoutSeconds null if no timeout
    * @return None
    */
-  public static boolean assignDuoUserAlias(String userId, String aliasId, String aliasValue, Integer timeoutSeconds) {
+  public static void assignDuoUserAlias(String userId, String aliasId, String aliasValue, Integer timeoutSeconds) {
 
     Map<String, Object> debugMap = new LinkedHashMap<String, Object>();
 
@@ -257,7 +257,6 @@ public class GrouperDuoAliasCommands {
       Http request = httpAdmin("POST", path);
 
       JSONObject aliasParam = new JSONObject();
-      aliasParam.put(aliasId, alias);
 
       String formatedAliases = String.format("%s=%s", aliasId, aliasValue);
       request.addParam( "aliases", formatedAliases );
@@ -270,7 +269,6 @@ public class GrouperDuoAliasCommands {
 
       if (jsonObject.has("code") && jsonObject.getInt("code") == 40401) {
         debugMap.put("code", 40401);
-        return false;
       }
 
       if (!StringUtils.equals(jsonObject.getString("stat"), "OK")) {
@@ -278,14 +276,15 @@ public class GrouperDuoAliasCommands {
         debugMap.put("result", result);
         throw new RuntimeException("Bad response from Duo: " + result + ", " + userId);
       }
-      JSONObject duoUser = jsonObject.get("response");
+
+      JSONObject duoUser = (JSONObject) jsonObject.get("response");
 
       if (duoUser != null) {
         debugMap.put("wasSet", duoUser.getJSONObject("aliases").get(aliasId).equals(aliasValue));
       }
 
     } catch (RuntimeException re) {
-      debugMap.put("exception", ExceptionUtils.getFullStackTrace(re));
+      debugMap.put("exception", ExceptionUtils.getStackTrace(re));
       throw re;
     }
   }

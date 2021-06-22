@@ -9,8 +9,8 @@ import java.util.Map;
 
 import edu.berkeley.calnet.grouper.duoAlias.GrouperDuoAliasCommands;
 import edu.berkeley.calnet.grouper.duoAlias.GrouperDuoAliasSet;
-import edu.berkeley.calnet.grouper.duoAlias.GrouperDuoUtils;
-import org.apache.commons.lang.StringUtils;
+import edu.berkeley.calnet.grouper.duoAlias.GrouperDuoAliasUtils;
+import org.apache.commons.lang3.StringUtils;
 
 import edu.internet2.middleware.grouper.Group;
 import edu.internet2.middleware.grouper.GroupFinder;
@@ -75,7 +75,9 @@ public class GrouperDuoAliasChangeLogConsumer extends ChangeLogConsumerBase {
 
               String subjectId = changeLogEntry.retrieveValueForLabel(ChangeLogLabels.MEMBERSHIP_ADD.subjectId);
               
-              String subjectAttributeForDuoUsername = GrouperDuoUtils.configSubjectAttributeForDuoUsername();
+              String subjectAttributeForDuoUsername = GrouperDuoAliasUtils.configSubjectAttributeForDuoUsername();
+
+              Group group = GroupFinder.findByName(grouperSession, groupName, false);
                 
               String username = null;
               Subject subject = SubjectFinder.findByIdAndSource(subjectId, sourceId, false);

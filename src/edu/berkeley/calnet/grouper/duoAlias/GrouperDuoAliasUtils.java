@@ -17,8 +17,8 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 
-import org.apache.commons.lang.StringUtils;
-import org.apache.commons.lang.exception.ExceptionUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 
 import org.apache.commons.jexl3.*;
 import org.apache.commons.jexl3.JxltEngine;
@@ -30,7 +30,7 @@ import org.slf4j.LoggerFactory;
  *
  */
 public class GrouperDuoAliasUtils {
-  static Map<String, DuoAliasSet> groupNameAliasMap = new HashMap();
+  static Map<String, GrouperDuoAliasSet> groupNameAliasMap = new HashMap();
   private static Logger LOG = LoggerFactory.getLogger(GrouperDuoAliasUtils.class);
 
 
@@ -108,7 +108,7 @@ public class GrouperDuoAliasUtils {
                   String.format("changeLog.consumer.duoAlias.%s.expression", alias)) != null)) {
             JxltEngine.Expression exp = createJxltExpression(GrouperLoaderConfig.retrieveConfig().propertyValueStringRequired(
                     String.format("grouperDuoAlias.%s.expression", alias)));
-            DuoAliasSet aliasSet = new DuoAliasSet();
+            GrouperDuoAliasSet aliasSet = new GrouperDuoAliasSet();
             aliasSet.setAliasName(alias);
             aliasSet.setExpression(exp);
             aliasSet.setAliasValue("");
