@@ -12,6 +12,9 @@ Example:
 grouperDuoAlias.alias1.expression = myPrefix${subject.getAttributeValue("id")}
 grouperDuoAlias.alias1.groupName = someStem:myAliasgroup1
 
+When a member is added to an alias group, the alias is set. When a member is deleted, the alias is removed. 
+
+When the full refresh runs, it will look for deletes that have happened in the past to confirm the alias values have been removed. 
 To compile use:
 
  mvn clean package dependency:copy-dependencies -DincludeScope=runtime
