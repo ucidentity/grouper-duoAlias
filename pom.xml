@@ -16,7 +16,7 @@
         <slf4j.version>1.7.25</slf4j.version>
         <duoClient.version>0.3.0</duoClient.version>
         <okhttp.version>2.7.5</okhttp.version>
-        <okio.version>2.10.0</okio.version>
+        <okio.version>3.4.0</okio.version>
         <commons-lang3.version>3.12.0</commons-lang3.version>
         <commons-jexl3.version>3.2</commons-jexl3.version>
         <commons-logging.version>1.2</commons-logging.version>
